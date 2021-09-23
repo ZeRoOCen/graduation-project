@@ -1,0 +1,35 @@
+html,body,#app{
+    height:100%;
+    margin:0;
+    padding:0;
+}
+
+/* 火狐浏览器滚动条样式 */
+
+* {
+  scrollbar-color: #666666 rgb(32, 32, 32); /* 滑块颜色  滚动条背景颜色 */
+  scrollbar-width: thin; /* 滚动条宽度样式有三种：thin（椭圆长方形）、auto（正方形）、none（无） */
+}
+
+
+/* 谷歌浏览器滚动条样式 */
+
+::-webkit-scrollbar {
+  width: 6px;/* 纵向滚动条*/
+  height: 6px;/* 横向滚动条 */
+  background: black;
+}
+/*定义滑块*/
+::-webkit-scrollbar-thumb {
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0);
+  background-color: #4b4a44;
+  border-radius: 4px;
+}
+ /*定义滑块（当鼠标悬停在滚动条上时）*/
+:hover::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 53%, 0.4);
+}
+/*定义滚动条轨道（当鼠标悬停在滚动条上时）*/
+:hover::-webkit-scrollbar-track {
+  background: hsla(0, 0%, 53%, 0.1);
+}

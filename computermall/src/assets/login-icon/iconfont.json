@@ -1,0 +1,23 @@
+{
+  "id": "2375773",
+  "name": "computermall",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "5809184",
+      "name": "密码",
+      "font_class": "mima",
+      "unicode": "e68c",
+      "unicode_decimal": 59020
+    },
+    {
+      "icon_id": "2578488",
+      "name": "登录",
+      "font_class": "denglu",
+      "unicode": "e611",
+      "unicode_decimal": 58897
+    }
+  ]
+}
