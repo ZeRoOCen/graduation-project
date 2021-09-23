@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.computermall.project.mapper.GoodMapper">
+
+    <!--  获取商品的信息、配置相应的当前页和每页最大数量  -->
+    <!--通过分页查询，查询所有商品信息-->
+    <!--
+        limit i,n 常用于分页查询
+        pagestart(i)：查询结果的索引值(默认从0开始)，当i=0时可省略i
+        pagesize(n)：查询结果返回的数量
+        例子：# 查询10条数据，索引从0到9，第1条记录到第10条记录：  select * from t_user limit 10;   &&   select * from t_user limit 0,10;
+             # 查询8条数据，索引从5到12，第6条记录到第13条记录：  select * from t_user limit 5,8;
+    -->
+    <select id="getAllGood" resultType="com.computermall.project.POJO.Good">
+        select * from computermall.good
+        <if test="goodName != null">
+            where gname like #{goodName}
+        </if>
+        limit #{pageStart}, #{pageSize}
+    </select>
+
+    <select id="getAllGoodsActivity" resultType="com.computermall.project.POJO.GoodsActivity">
+        select * from computermall.goodsactivity
+        <if test="goodsName != null">
+            where gname like #{goodsName}
+        </if>
+        limit #{pageStart}, #{pageSize}
+    </select>
+
+    <!--  根据商品名来确定商品的总数量  -->
+    <select id="getGoodCounts" resultType="java.lang.Integer">
+        select count(*) from computermall.good
+        <if test="goodName != null">
+            where gname like #{goodName}
+        </if>
+    </select>
+
+    <!--  根据活动商品名来获取到商品的总数量  -->
+    <select id="getGoodAcvityCounts" resultType="java.lang.Integer">
+        select count(*) from computermall.goodsactivity
+        <if test="goodsName != null">
+            where gname like #{goodsName}
+        </if>
+    </select>
+
+    <!--  添加商品信息  -->
+    <insert id="addGood" parameterType="com.computermall.project.POJO.Good">
+        insert into computermall.good (gname,gprice,sgsort,mgsort,gstate,gmessage)
+        values (#{gname},#{gprice},#{sgsort},#{mgsort},#{gstate},#{gmessage})
+    </insert>
+
+    <!--  添加商品信息到购物车表中  -->
+    <insert id="addGoodToCart" parameterType="com.computermall.project.POJO.ShoppingCart">
+        insert into computermall.shoppingcart (gname,gprice,sgsort,mgsort,gstate,gimgurl,gmessage)
+        values (#{gname},#{gprice},#{sgsort},#{mgsort},#{gstate},#{gimgurl},#{gmessage})
+    </insert>
+
+    <!-- 修改商品状态 -->
+    <update id="updateGoodState">
+        update computermall.good
+        set gstate = #{goodState}
+        where gid = #{goodId}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteGood">
+        delete from computermall.good where gid = #{goodId}
+    </delete>
+
+    <!-- 根据商品名获取用户信息 -->
+    <select id="getGoodInfoByName" resultType="com.computermall.project.POJO.Good">
+        select * from computermall.good where gname like #{goodName}
+    </select>
+
+    <!-- 根据商品id获取商品信息，（给编辑用户弹窗附初始值） -->
+    <select id="getUpdateGood" resultType="com.computermall.project.POJO.Good">
+        select * from computermall.good where gid = #{goodId}
+    </select>
+
+    <!-- 编辑商品信息  由于指定了编辑内容，不像addUser添加用户，获取了所有的User对象，而只使用了其中的一部分
+         由于接口 public int editUser(User user); 无法自定义字段名，所以这里无法使用自定义字段名，比如uname=#{userName}-->
+    <update id="editGood">
+        update computermall.good
+        set gname=#{gname}, gprice=#{gprice}, mgsort=#{mgsort}, sgsort=#{sgsort}, gmessage=#{gmessage}
+        where gid=#{gid}
+    </update>
+
+    <!--  根据用户ID查询购物车商品信息和用户角色权限  -->
+    <select id="getCartGood" resultType="com.computermall.project.POJO.ShoppingCart">
+        select * from computermall.shoppingcart where uid = #{userId}
+    </select>
+
+<!--  根据购物车信息更新购物车相同商品数目  -->
+    <insert id="addCartGoodSameCount" parameterType="com.computermall.project.POJO.ShoppingCart">
+            insert ignore into computermall.cartsamegoodsnumbers (gname, gimgurl, gprice, amount, uid, urole, favorableprice)
+            select distinct gname, gimgurl, gprice, count(gname), uid, urole, favorableprice from computermall.shoppingcart
+    </insert>
+
+<!--  查询相同商品数量  -->
+    <select id="selectCartGoodsAmount" resultType="java.lang.Integer">
+        select count(gname)
+        from computermall.shoppingcart
+        where uid = #{userId} and gname = #{goodsName}
+        group by gname
+    </select>
+
+<!--  会员用户进行商品打折  -->
+    <update id="updateGoodsDiscount">
+        update computermall.shoppingcart
+        set favorableprice = gprice - gprice*0.8
+        where uid = #{userId} and gname = #{goodsName}
+    </update>
+
+<!--  获取商品打折的价格  -->
+    <select id="getGoodsDiscount" resultType="java.lang.Integer">
+        select favorableprice
+        from computermall.shoppingcart
+        where uid = #{userId} and gname = #{goodsName}
+    </select>
+
+<!--  查询相同商品的名称以及对应的数量  -->
+    <select id="getCartGoodsSameCount" resultType="com.computermall.project.POJO.CartSameGoodsNumbers">
+        select * from computermall.cartsamegoodsnumbers
+        where uid = #{userId}
+    </select>
+
+    <select id="selectSameGoodsId" resultType="java.lang.String">
+        select id
+        from computermall.cartsamegoodsnumbers
+        where gname = #{goodsName} and uid = #{userId}
+    </select>
+
+<!--  更新购物车列表至汇总展示列表  -->
+    <insert id="updateSameGoods" parameterType="com.computermall.project.POJO.ShoppingCart">
+        insert into computermall.cartsamegoodsnumbers (gname, gimgurl, gprice, uid, urole, favorableprice)
+        select distinct gname, gimgurl, gprice, uid, urole, favorableprice from computermall.shoppingcart where uid = #{userId} and gname = #{goodsName}
+    </insert>
+
+<!--  更新商品表唯一id至的对应的汇总展示列表  -->
+    <update id="updateSameGoodsId">
+        update computermall.cartsamegoodsnumbers
+        set id = #{sameGoodsId}
+        where uid = #{userId} and gname = #{goodsName}
+    </update>
+
+<!--    <update id="updateSameGoods">-->
+<!--        update computermall.cartsamegoodsnumbers-->
+<!--        set (gname, gimgurl, gprice, uid, urole, favorableprice) = (-->
+<!--        select (distinct gname, gimgurl, gprice, uid, urole, favorableprice) from computermall.shoppingcart where uid = #{userId}-->
+<!--        )-->
+<!--    </update>-->
+
+<!--  购物车商品数量+1操作  -->
+    <update id="updateGoodsAmount">
+        update computermall.cartsamegoodsnumbers
+        set amount = amount + 1
+        where gname = #{goodsName} and uid = #{userId}
+    </update>
+
+<!-- 根据商品名更新购物车商品数量   -->
+    <update id="amountChanged">
+        update computermall.cartsamegoodsnumbers
+        set amount = #{goodsAmount}
+        where gname = #{goodsName}
+    </update>
+
+<!--  将用户id、购物车商品总价格、订单号和订单时间推送至goodsorder表中  -->
+    <insert id="addOrder" parameterType="com.computermall.project.POJO.GoodsOrder">
+        insert into computermall.goodsorder (uid, totalPrice, ordernumber, ordertime)
+        values (#{userId}, #{totalPrice}, #{orderNumber}, #{orderTime})
+    </insert>
+
+<!--  根据订单号添加付款时间  -->
+    <update id="createPaymentTime">
+        update computermall.goodsorder
+        set paytime = #{payTime}, paystate = #{payState}
+        where ordernumber = #{orderNumber}
+    </update>
+
+<!--  根据用户ID删除购物车中的商品 -->
+    <delete id="deleteCartGoods">
+        delete from computermall.shoppingcart where gname = #{goodsName} and uid = #{userId}
+    </delete>
+
+<!--  根据用户ID删除购物车的相同商品部分  -->
+    <delete id="deleteCartSameGoods">
+        delete from computermall.cartsamegoodsnumbers where gname = #{goodsName} and uid = #{userId}
+    </delete>
+
+<!--  根据订单号取消订单  -->
+    <delete id="cancelOrder" parameterType="java.lang.String">
+        delete from computermall.goodsorder where ordernumber = #{orderNumber}
+    </delete>
+
+<!--  获取所有订单信息  -->
+    <select id="getOrderInfo" resultType="com.computermall.project.POJO.GoodsOrder">
+        select totalprice, ordernumber, ordertime, paytime, paystate
+        from computermall.goodsorder
+        where uid = #{userId}
+    </select>
+
+<!--  根据订单号获取订单信息  -->
+    <select id="getOrderRow" resultType="com.computermall.project.POJO.GoodsOrder">
+        select totalprice, ordernumber, ordertime, paytime, paystate
+        from computermall.goodsorder
+        where ordernumber = #{orderNumber}
+    </select>
+
+<!--根据商品ID将商品添加至活动商品表中-->
+    <insert id="addGoodsToActivity">
+        insert into computermall.goodsactivity(gname, gprice, gimgurl, gmessage)
+        select gname, gprice, gimgurl, gmessage from computermall.good where gid = #{goodsId}
+    </insert>
+
+<!--获取所有商品活动的信息-->
+    <select id="getGoodsActivity" resultType="com.computermall.project.POJO.GoodsActivity">
+        select * from computermall.goodsactivity
+    </select>
+
+<!--  根据商品名获取good商品表中此商品所有信息  -->
+    <select id="getActivitySingleGoods" resultType="com.computermall.project.POJO.Good">
+        select * from computermall.good where gname = #{goodsName}
+    </select>
+
+<!--  根据用户ID查看对应的商品名是否存在与评论表中，如果存在，返回评论权限（此时的评论权限一般为1）  -->
+    <select id="judgeUidToGoodsExist" resultType="java.lang.Integer">
+        select power from computermall.goodscomment where gname = #{goodsName} and uid = #{userId}
+    </select>
+
+<!--  添加商品名、用户ID、用户名将用户对该商品评论权限变为1（开启）  -->
+    <insert id="addGoodsCommentData">
+        insert into computermall.goodscomment(gname, uid, uname, power)
+        values(#{goodsName}, #{userId}, #{userName}, 1)
+    </insert>
+
+    <select id="getCommentCount" resultType="java.lang.Integer">
+        select count(*) from computermall.goodscomment
+        where gcomment like #{commentMessage} and gcomment != "" and gname = #{currentGoodsName}
+    </select>
+
+
+<!--  根据商品评论信息，商品名，每页开头的数量，每页展示数量来获取每页展示的商品评论信息内容  -->
+    <select id="getGoodsComment" resultType="com.computermall.project.POJO.GoodsComment">
+        select * from computermall.goodscomment
+        where gcomment like #{commentMessage} and gname = #{currentGoodsName}
+        limit #{commentPageStart}, #{commentPageSize}
+    </select>
+
+<!--  根据商品名和用户id查找相应的商品评论  -->
+    <select id="getComment" resultType="com.computermall.project.POJO.GoodsComment">
+        select * from computermall.goodscomment
+        where gname = #{goodsName} and uid = #{userId}
+    </select>
+
+<!--  根据用户id，商品名提交商品评分和输入框评价内容  -->
+    <update id="updateUserComment">
+        update computermall.goodscomment
+        set gcomment = #{goodsComment}, grade = #{goodsGrade}
+        where uid = #{userId} and gname = #{goodsName}
+    </update>
+
+<!--  根据商品名获取到对应的商品客服名  -->
+    <select id="selectCustomerName" resultType="java.lang.String">
+        select cname from computermall.good
+        where gname = #{goodsName}
+    </select>
+
+<!--  删除活动商品  -->
+    <delete id="deleteGoodsActivity">
+        delete from computermall.goodsactivity where gname = #{goodsName}
+    </delete>
+    <!--  添加商品图片（测试用）  -->
+<!--    <insert id="addGoodImgUrl" parameterType="com.computermall.project.POJO.Good">-->
+<!--        insert into computermall.good(gimgurl)-->
+<!--        values (#{gimgurl})-->
+<!--    </insert>-->
+
+</mapper>

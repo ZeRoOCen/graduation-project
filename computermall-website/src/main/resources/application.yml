@@ -1,0 +1,21 @@
+#server.port    设置端口号
+#server.servlet.context-path   访问方式为：localhost:9000/  (默认情况就是/，这里只是标注一下。context-path/后面可以加地址，当输入网址的时候，地址也要带上)
+server:
+  port: 9000
+  servlet:
+    context-path: /
+
+#allowMultiQueries=true 可以在sql语句后携带分号,实现多语句执行；可以执行批处理，同时发出多个SQL语句。
+spring:
+  datasource:
+    username: root
+    password: 123
+    url: jdbc:mysql://localhost:3306/computermall?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC&allowMultiQueries=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+# mapper-locations: 配置mapper下的所有xml文件（classpath默认在resources静态资源下寻找，如果xml需要放在其他地方：https://blog.csdn.net/qq_41357211/article/details/99855643）
+mybatis:
+  mapper-locations: classpath:mapper/*.xml

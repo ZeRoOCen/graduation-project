@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.computermall.project.mapper.MenuMapper">
+
+    <!-- 一对多查询（主菜单与子菜单） -->
+    <select id="getMenus" resultMap="menuMap">
+        select mm.*, sm.sid, sm.stitle, sm.spath, sm.mid, tm.tid, tm.ttitle, tm.tpath, tm.sid
+        from mainmenu mm, submenu sm left join thirdmenu tm on sm.sid = tm.sid
+        where mm.mid = sm.mid
+
+<!--        <choose>-->
+<!--            <when test="mid !='' and mid != null">-->
+<!--                mm.mid = sm.mid-->
+<!--            </when>-->
+<!--            <when test="sid !='' and sid != null">-->
+<!--                and sm.sid = tm.sid-->
+<!--            </when>-->
+<!--        </choose>-->
+
+    </select>
+<!--    <select id="getMenus" resultMap="menuMap">-->
+<!--        select mm.*, sm.sid, sm.stitle, sm.spath, sm.mid-->
+<!--        from mainmenu mm, submenu sm-->
+<!--        where mm.mid = sm.mid-->
+<!--    </select>-->
+    <!-- 关系映射 -->
+    <!--protery:对应POJO(bean)中java对象的属性名
+        column :数据库的列名或取的别名(比如sm.id as sid的sid即为id的别名)
+        这里由于SubMenu的javaType类型不能是List类型，所以用ofType获取List的泛型，即主菜单实体类中List<SubMenu>中的sList-->
+    <resultMap id="menuMap" type="com.computermall.project.POJO.MainMenu">
+        <id property="mid" column="mid"></id>
+        <result property="mtitle" column="mtitle"></result>
+        <result property="mpath" column="mpath"></result>
+        <collection property="sList" ofType="com.computermall.project.POJO.SubMenu"> <!-- 通过主菜单来获取子菜单的数据，即关系映射 -->
+            <id property="sid" column="sid"></id>
+            <result property="stitle" column="stitle"></result>
+            <result property="spath" column="spath"></result>
+            <result property="mid" column="mid"></result>
+            <collection property="tList" ofType="com.computermall.project.POJO.ThirdMenu"><!-- 通过子菜单来获取三级菜单的数据，即关系映射 -->
+                <id property="tid" column="tid"></id>
+                <result property="ttitle" column="ttitle"></result>
+                <result property="tpath" column="tpath"></result>
+                <result property="sid" column="sid"></result>
+            </collection>
+        </collection>
+<!--        <collection property="tList" ofType="com.computermall.project.POJO.ThirdMenu">-->
+<!--            <id property="tid" column="tid"></id>-->
+<!--            <result property="ttitle" column="ttitle"></result>-->
+<!--            <result property="tpath" column="tpath"></result>-->
+<!--            <result property="sid" column="sid"></result>-->
+<!--        </collection>-->
+    </resultMap>
+
+    <!-- 一对多查询（子菜单与三级菜单） -->
+<!--    <select id="getSubMenus" resultMap="subMenuMap">-->
+<!--        select sm.*,tm.tid, tm.ttitle, tm.tpath, tm.sid-->
+<!--        from submenu sm, thirdmenu tm-->
+<!--        where sm.sid = tm.sid-->
+<!--    </select>-->
+
+<!--    <resultMap id="subMenuMap" type="com.computermall.project.POJO.SubMenu">-->
+<!--        <id property="sid" column="sid"></id>-->
+<!--        <result property="stitle" column="stitle"></result>-->
+<!--        <result property="spath" column="spath"></result>-->
+<!--        <collection property="tList" ofType="com.computermall.project.POJO.ThirdMenu">-->
+<!--            <id property="tid" column="tid"></id>-->
+<!--            <result property="ttitle" column="ttitle"></result>-->
+<!--            <result property="tpath" column="tpath"></result>-->
+<!--            <result property="sid" column="sid"></result>-->
+<!--        </collection>-->
+<!--    </resultMap>-->
+
+
+</mapper>

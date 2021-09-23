@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.computermall.project.mapper.UserMapper">
+<!--    登录账户
+    #{userName}值和#{userPassword}值的传递过程：
+    一：从前端 await this.$http.post("login", this.loginForm)通过this.loginForm获取到uname和upassword，
+       把值传递给后端LoginController的/login的public String login(@RequestBody User user)的user中
+    二：userMapper.getUserByMessage(user.getUname(),user.getUpassword())。值被userMapper获取到
+       并且重命名为userName和userPassword
+    三：最后在UserMapper.xml中，把userName和userPassword的值赋给uname和upassword，
+       然后与user表中查询到的uname和upassword的值进行匹配。匹配成功，把查询到的此uname的信息赋给LoginController中的allUser  -->
+    <select id="getUserByMessage" resultType="com.computermall.project.POJO.User">
+        select * from computermall.user where uname = #{userName} and upassword = #{userPassword}
+    </select>
+
+    <!--通过分页查询，查询所有的用户-->
+    <!--
+        limit i,n 常用于分页查询
+        pagestart(i)：查询结果的索引值(默认从0开始)，当i=0时可省略i
+        pagesize(n)：查询结果返回的数量
+        例子：# 查询10条数据，索引从0到9，第1条记录到第10条记录：  select * from t_user limit 10;   &&   select * from t_user limit 0,10;
+             # 查询8条数据，索引从5到12，第6条记录到第13条记录：  select * from t_user limit 5,8;
+    -->
+    <select id="getAllUser" resultType="com.computermall.project.POJO.User">
+        select * from computermall.user
+        <if test="userName != null">
+            where uname like #{userName}
+        </if>
+        limit #{pageStart}, #{pageSize}
+    </select>
+
+    <!-- 通过查询用户名来判断用户数量，所以返回的结果集是int类型 -->
+    <!-- select count(*)：函数返回在给定的选择中被选的行数 -->
+    <!--模糊查询可以在sql语句中写，也可以在之后的UserController中写
+            like #{userName}
+            concat('%',#{userName},'%')
+            like '%'#{userName}'%'
+    -->
+    <select id="getUserCounts" resultType="java.lang.Integer">
+        <if test="userName != null">
+            select count(*) from user
+            where uname like #{userName}
+        </if>
+    </select>
+
+<!--  获取头像绝对路径进行数据库匹配  -->
+<!--    <select id="getAvatar" resultType="java.lang.String">-->
+<!--        select uavatar from computermall.user where user = #{userList}-->
+<!--    </select>-->
+
+    <!-- 获取新添加的购物车ID -->
+    <select id="getCartId" resultType="java.lang.Integer">
+        select cartid from computermall.shoppingcart order by cartid desc limit 1
+    </select>
+    <!--  将用户名和用户角色权限加入到购物车表中最后一个信息里  -->
+   <update id="addNameIdAndRoleToCart">
+       update computermall.shoppingcart set uid = #{userId}, uname = #{userName}, urole = #{userRole} where cartid = #{cartId}
+   </update>
+
+    <!-- 修改用户状态 -->
+    <update id="updateUserState">
+        update computermall.user
+        set ustate = #{userState}
+        where uid = #{userId}
+    </update>
+
+    <!-- 根据用户id修改用户名 -->
+    <update id="updateUname">
+        update computermall.user
+        set uname = #{userName}
+        where uid = #{userId}
+    </update>
+
+    <!-- 根据用户id修改用户姓别 -->
+    <update id="updateUsex">
+        update computermall.user
+        set usex = #{userSex}
+        where uid = #{userId}
+    </update>
+
+    <!-- 根据用户id修改用户手机号 -->
+    <update id="updateUmobile">
+        update computermall.user
+        set umobile = #{userMobile}
+        where uid = #{userId}
+    </update>
+
+    <!-- 根据用户id修改用户收货地址 -->
+    <update id="updateUaddress">
+        update computermall.user
+        set uaddress = #{userAddress}
+        where uid = #{userId}
+    </update>
+
+    <!-- 添加用户  由于UserMapper中 public int addUser(User user); 没有使用@Param，所以字段无法自定义命名 -->
+    <insert id="addUser">
+        insert into computermall.user (uname,upassword,usex,urole,ustate,umobile,uaddress)
+        values (#{uname},#{upassword},#{usex},#{urole},#{ustate},#{umobile},#{uaddress})
+    </insert>
+
+    <!--  获取新添加的用户的ID  mysql不支持top的语法：select top 1 uid from computermall.user order by uid desc-->
+    <select id="getNewUserId" resultType="java.lang.Integer">
+        select uid from computermall.user order by uid desc limit 1
+    </select>
+
+    <!--  修改用户头像到已存在的用户中  -->
+    <update id="updateUserAvatar">
+        update computermall.user set uavatar = #{userAvatar} where uid = #{userId}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteUser">
+        delete from computermall.user where uid = #{userId}
+    </delete>
+
+    <!-- 根据用户ID查询此用户全部信息 -->
+    <select id="getUserInfo" resultType="com.computermall.project.POJO.User">
+        select * from computermall.user where uid = #{userId}
+    </select>
+
+    <!-- 编辑用户信息  由于指定了编辑内容，不像addUser添加用户，获取了所有的User对象，而只使用了其中的一部分
+         由于接口 public int editUser(User user); 无法自定义字段名，所以这里无法使用自定义字段名，比如uname=#{userName}-->
+    <update id="editUser">
+        update computermall.user
+        set urole=#{urole}, uname=#{uname}, upassword=#{upassword}, usex=#{usex}, umobile=#{umobile}, uaddress=#{uaddress}
+        where uid=#{uid}
+    </update>
+
+<!--  根据用户名和商品客服名判断备用联系客服表中是否存在该用户对此商品的唯一id，若不存在，则添加唯一id  -->
+    <select id="selectConnectionId" resultType="java.lang.Integer">
+        select id from computermall.sparecustomer
+        where cname = #{customerName} and uname = #{userName}
+    </select>
+
+<!--  添加用户名和商品客服名添加唯一ID  -->
+    <insert id="addContactInfo">
+        insert into computermall.sparecustomer(id, cname, uname)
+        values (#{onlyId}, #{customerName}, #{userName})
+    </insert>
+
+<!--  根据用户名查询对应的联系客服相关信息  -->
+    <select id="selectContactInfo" resultType="com.computermall.project.POJO.SpareCustomer">
+        select id, uname, cname
+        from computermall.sparecustomer
+        where uname = #{userName}
+    </select>
+
+<!--  获取客服头像  -->
+<!--    <select id="getCustomerAvatar" resultType="java.lang.String">-->
+<!--        select gimgurl-->
+<!--        from computermall.good-->
+<!--        where cname = #{customerName}-->
+<!--    </select>-->
+
+<!--  保存发送消息相关的所有信息  -->
+    <insert id="saveChatInfo">
+        insert into computermall.sparechatinfo (connectid, name, message, time)
+        values (#{connectid}, #{sendName}, #{sendMessage}, #{sendTime})
+    </insert>
+
+<!--  获取到指定连接id的唯一消息id，发送名称，发送信息和发送时间  -->
+    <select id="getChatMessage" resultType="com.computermall.project.POJO.SpareChatInfo">
+        select id, name, message, time
+        from computermall.sparechatinfo
+        where connectid = #{connectid}
+    </select>
+
+<!--  客服获取用户列表  -->
+    <select id="getUserList" resultType="com.computermall.project.POJO.UnameAndId">
+        select id, uname
+        from computermall.sparecustomer
+        where cname = #{customerName}
+    </select>
+
+</mapper>
